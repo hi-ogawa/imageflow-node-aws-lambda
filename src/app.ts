@@ -72,7 +72,7 @@ app.get("/resize", async (req, res) => {
   const { w, h, url } = parsed.data;
   const urlRes = await fetch(url);
   if (!urlRes.headers.get("content-type")?.startsWith("image")) {
-    res.code(400).send({ message: "invalid url (invalid image)" });
+    res.code(400).send({ message: "invalid url (invalid content-type)" });
     return;
   }
   const contentLength = zContentLength.safeParse(
@@ -82,9 +82,10 @@ app.get("/resize", async (req, res) => {
     res.code(400).send({ message: "invalid url (too large image)" });
     return;
   }
-  const buffer = Buffer.from(await urlRes.arrayBuffer());
+  const input = Buffer.from(await urlRes.arrayBuffer());
+  const output = await resize(input, w, h);
   res.header("content-type", "image/png");
-  await resize(buffer, res.raw, w, h);
+  res.send(output);
 });
 
 //
@@ -103,7 +104,8 @@ app.post("/resize", async (req, res) => {
     return;
   }
   const { w, h } = parsed.data;
-  const buffer = await streamToBuffer(req.raw);
+  const input = await streamToBuffer(req.raw);
+  const output = await resize(input, w, h);
   res.header("content-type", "image/png");
-  await resize(buffer, res.raw, w, h);
+  res.send(output);
 });

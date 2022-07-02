@@ -1,0 +1,32 @@
+{
+  "scripts": {
+    "dev": "nodemon --exec 'node -r esbuild-register' ./src/index.ts",
+    "tsc": "tsc",
+    "tsc:dev": "tsc --watch --preserveWatchOutput",
+    "lint": "prettier -w .",
+    "lint:check": "prettier -c .",
+    "build": "esbuild src/index-vercel.ts --outfile=build/vercel/index.js --bundle --platform=node --external:@imazen/imageflow",
+    "deploy": "npm run build && vercel deploy",
+    "deploy:production": "npm run build && vercel deploy --prod"
+  },
+  "dependencies": {
+    "@imazen/imageflow": "^0.0.1-rc17",
+    "zod": "^3.17.3"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.182",
+    "@types/node": "^16.0.0",
+    "esbuild": "^0.14.47",
+    "esbuild-register": "^3.3.3",
+    "fastify": "^4.1.0",
+    "lodash": "^4.17.21",
+    "nodemon": "^2.0.18",
+    "prettier": "^2.7.1",
+    "typescript": "^4.7.4",
+    "undici": "^5.6.0"
+  },
+  "volta": {
+    "node": "16.15.1",
+    "npm": "8.13.1"
+  }
+}

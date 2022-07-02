@@ -85,6 +85,7 @@ app.get("/resize", async (req, res) => {
   const input = Buffer.from(await urlRes.arrayBuffer());
   const output = await resize(input, w, h);
   res.header("content-type", "image/png");
+  res.header("cache-control", "public, max-age=31536000");
   res.send(output);
 });
 
@@ -107,5 +108,6 @@ app.post("/resize", async (req, res) => {
   const input = await streamToBuffer(req.raw);
   const output = await resize(input, w, h);
   res.header("content-type", "image/png");
+  res.header("cache-control", "public, max-age=31536000");
   res.send(output);
 });

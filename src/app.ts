@@ -3,6 +3,7 @@ import { sortKeys, streamToBuffer } from "./utils";
 import { fetch } from "undici";
 import { z } from "zod";
 import { resize } from "./image-utils";
+import { ConstrainMode } from "@imazen/imageflow";
 
 export const app = fastify({
   logger: true,
@@ -61,6 +62,7 @@ const GET_RESIZE_SCHEMA = z.object({
   w: zSize,
   h: zSize,
   url: z.string().url(),
+  version: z.string().optional(), // invalid cache by tweaking url
 });
 
 app.get("/resize", async (req, res) => {
@@ -71,10 +73,6 @@ app.get("/resize", async (req, res) => {
   }
   const { w, h, url } = parsed.data;
   const urlRes = await fetch(url);
-  if (!urlRes.headers.get("content-type")?.startsWith("image")) {
-    res.code(400).send({ message: "invalid url (invalid content-type)" });
-    return;
-  }
   const contentLength = zContentLength.safeParse(
     urlRes.headers.get("content-length")
   );
@@ -83,7 +81,7 @@ app.get("/resize", async (req, res) => {
     return;
   }
   const input = Buffer.from(await urlRes.arrayBuffer());
-  const output = await resize(input, w, h);
+  const output = await resize(input, ConstrainMode.FitCrop, w, h);
   res.header("content-type", "image/png");
   res.header("cache-control", "public, max-age=31536000");
   res.send(output);
@@ -96,6 +94,7 @@ app.get("/resize", async (req, res) => {
 const POST_RESIZE_SCHEMA = z.object({
   w: zSize,
   h: zSize,
+  version: z.string(),
 });
 
 app.post("/resize", async (req, res) => {
@@ -106,8 +105,7 @@ app.post("/resize", async (req, res) => {
   }
   const { w, h } = parsed.data;
   const input = await streamToBuffer(req.raw);
-  const output = await resize(input, w, h);
+  const output = await resize(input, ConstrainMode.FitCrop, w, h);
   res.header("content-type", "image/png");
-  res.header("cache-control", "public, max-age=31536000");
   res.send(output);
 });
